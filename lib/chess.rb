@@ -2,7 +2,7 @@
 
 # An object representing the king chess piece
 class King
-  attr_accessor :color, :symbol, :position, :possible_moves, :move_count
+  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :castled
 
   def initialize(color, position)
     @color = color
@@ -10,6 +10,7 @@ class King
     @position = position
     @possible_moves = legal_moves
     @move_count = 0
+    @castled = false
   end
 
   def symbol_selector
@@ -46,6 +47,14 @@ class King
     end
     unless current_position[0, 1] == 'A' || current_position[1, 1] == '1'
       moves.push((current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s)
+    end
+    if @castled == false && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
+      unless current_position[0, 1] == 'A' || current_position[0, 1] == 'B'
+        moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
+      end
+      unless current_position[0, 1] == 'G' || current_position[0, 1] == 'H'
+        moves.push((current_position[0, 1].ord + 2).chr + current_position[1, 1])
+      end
     end
     moves.uniq
   end
