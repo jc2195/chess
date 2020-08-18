@@ -26,6 +26,7 @@ describe King do
       expect(result.include?('B4')).to eql(true)
       expect(result.include?('B5')).to eql(true)
       expect(result.include?('B6')).to eql(true)
+      expect(result.length).to eql(8)
     end
 
     it 'correctly returns all moves if in corner of board' do
@@ -49,6 +50,29 @@ describe Rook do
     it 'sets @symbol as ♜ if @color is black' do
       rook = Rook.new('black', 'A1')
       expect(rook.symbol).to eql('♜')
+    end
+  end
+
+  describe '#all_moves' do
+    it 'correctly returns all moves' do
+      rook = Rook.new('black', 'F4')
+      result = rook.all_moves
+      expect(result.include?('F8')).to eql(true)
+      expect(result.include?('F7')).to eql(true)
+      expect(result.include?('F6')).to eql(true)
+      expect(result.include?('F5')).to eql(true)
+      expect(result.include?('F4')).to eql(true)
+      expect(result.include?('F3')).to eql(true)
+      expect(result.include?('F2')).to eql(true)
+      expect(result.include?('F1')).to eql(true)
+      expect(result.include?('A4')).to eql(true)
+      expect(result.include?('B4')).to eql(true)
+      expect(result.include?('C4')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.include?('E4')).to eql(true)
+      expect(result.include?('G4')).to eql(true)
+      expect(result.include?('H4')).to eql(true)
+      expect(result.length).to eql(15)
     end
   end
 end

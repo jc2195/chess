@@ -47,7 +47,7 @@ class King
     unless current_position[0, 1] == 'A' || current_position[1, 1] == '1'
       moves.push((current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s)
     end
-    moves
+    moves.uniq
   end
 end
 
@@ -68,6 +68,21 @@ class Rook
   end
 
   def legal_moves
+    all_moves
+  end
+
+  def all_moves
+    current_position = @position.dup
+    rows = ('1'..'8').to_a
+    columns = ('A'..'H').to_a
+    moves = []
+    rows.each do |row|
+      moves.push(current_position[0, 1] + row)
+    end
+    columns.each do |column|
+      moves.push(column + current_position[1, 1])
+    end
+    moves.uniq
   end
 end
 
