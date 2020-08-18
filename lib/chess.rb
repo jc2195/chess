@@ -17,6 +17,37 @@ class King
   end
 
   def legal_moves
+    all_moves
+  end
+
+  def all_moves
+    current_position = @position.dup
+    moves = []
+    unless current_position[0, 1] == 'H'
+      moves.push(current_position[0, 1].next + current_position[1, 1])
+    end
+    unless current_position[0, 1] == 'A'
+      moves.push((current_position[0, 1].ord - 1).chr + current_position[1, 1])
+    end
+    unless current_position[1, 1] == '8'
+      moves.push(current_position[0, 1] + current_position[1, 1].next)
+    end
+    unless current_position[1, 1] == '1'
+      moves.push(current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s)
+    end
+    unless current_position[0, 1] == 'A' || current_position[1, 1] == '8'
+      moves.push((current_position[0, 1].ord - 1).chr + current_position[1, 1].next)
+    end
+    unless current_position[0, 1] == 'H' || current_position[1, 1] == '8'
+      moves.push(current_position[0, 1].next + current_position[1, 1].next)
+    end
+    unless current_position[0, 1] == 'H' || current_position[1, 1] == '1'
+      moves.push(current_position[0, 1].next + (current_position[1, 1].to_i - 1).to_s)
+    end
+    unless current_position[0, 1] == 'A' || current_position[1, 1] == '1'
+      moves.push((current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s)
+    end
+    moves
   end
 end
 

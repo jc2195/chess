@@ -13,6 +13,30 @@ describe King do
       expect(king.symbol).to eql('♚')
     end
   end
+
+  describe '#all_moves' do
+    it 'correctly returns all moves if not on edge of board' do
+      king = King.new('white', 'C5')
+      result = king.all_moves
+      expect(result.include?('C6')).to eql(true)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('D5')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.include?('C4')).to eql(true)
+      expect(result.include?('B4')).to eql(true)
+      expect(result.include?('B5')).to eql(true)
+      expect(result.include?('B6')).to eql(true)
+    end
+
+    it 'correctly returns all moves if in corner of board' do
+      king = King.new('white', 'H8')
+      result = king.all_moves
+      expect(result.include?('H7')).to eql(true)
+      expect(result.include?('G7')).to eql(true)
+      expect(result.include?('G8')).to eql(true)
+      expect(result.length).to eql(3)
+    end
+  end
 end
 
 describe Rook do
