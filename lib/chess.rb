@@ -206,4 +206,22 @@ class Board
       'H1' => Rook.new(bottom, 'H1')
     }
   end
+
+  def show
+    puts '  A B C D E F G H'
+    puts ' -----------------'
+    letters = ('A'..'H').to_a
+    counter = 8
+    until counter.zero?
+      print '| '
+      letters.each do |letter|
+        value = @grid[(letter + counter.to_s)]
+        print "#{value.is_a?(String) ? value : value.symbol} "
+      end
+      puts "| #{counter.to_s}"
+      counter -= 1
+    end
+    puts ' -----------------'
+  end
 end
+
