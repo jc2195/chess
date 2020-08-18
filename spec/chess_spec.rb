@@ -35,7 +35,24 @@ describe King do
       expect(result.include?('H7')).to eql(true)
       expect(result.include?('G7')).to eql(true)
       expect(result.include?('G8')).to eql(true)
-      expect(result.length).to eql(3)
+      expect(result.length).to eql(4)
+    end
+
+    it 'correctly returns castling moves if on first rank and @castled is false' do
+      king = King.new('white', 'D1')
+      result = king.all_moves
+      expect(result.include?('B1')).to eql(true)
+      expect(result.include?('F1')).to eql(true)
+      expect(result.length).to eql(7)
+    end
+
+    it 'does not return castling moves if on first rank and @castled is true' do
+      king = King.new('white', 'D1')
+      king.castled = true
+      result = king.all_moves
+      expect(result.include?('B1')).to eql(false)
+      expect(result.include?('F1')).to eql(false)
+      expect(result.length).to eql(5)
     end
   end
 end
