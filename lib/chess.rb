@@ -1,5 +1,122 @@
 # frozen_string_literal: true
 
+# A module for various movement functions which are reused by different chess pieces
+module Movement
+  def diagonal(position, board)
+    current_position = position
+    piece_found = false
+    moves = []
+    until current_position[0, 1] == 'H' || current_position[1, 1] == '8' || piece_found
+      current_position = current_position[0, 1].next + current_position[1, 1].next
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[0, 1] == 'H' || current_position[1, 1] == '1' || piece_found
+      current_position = current_position[0, 1].next + (current_position[1, 1].to_i - 1).to_s
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[0, 1] == 'A' || current_position[1, 1] == '1' || piece_found
+      current_position = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[0, 1] == 'A' || current_position[1, 1] == '8' || piece_found
+      current_position = (current_position[0, 1].ord - 1).chr + current_position[1, 1].next
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    moves
+  end
+
+  def plus(position, board)
+    current_position = position
+    piece_found = false
+    moves = []
+    until current_position[0, 1] == 'H' || piece_found
+      current_position = current_position[0, 1].next + current_position[1, 1]
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[1, 1] == '1' || piece_found
+      current_position = current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[0, 1] == 'A' ||  piece_found
+      current_position = (current_position[0, 1].ord - 1).chr + current_position[1, 1]
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    current_position = position
+    piece_found = false
+    until current_position[1, 1] == '8' || piece_found
+      current_position = current_position[0, 1] + current_position[1, 1].next
+      if board[current_position].is_a?(String)
+        moves.push(current_position)
+      elsif board[current_position].color == @color
+        piece_found = true
+      else
+        moves.push(current_position)
+        piece_found = true
+      end
+    end
+    moves
+  end
+end
+
 # An object representing the king chess piece
 class King
   attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :castled
@@ -8,17 +125,12 @@ class King
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
     @castled = false
   end
 
   def symbol_selector
     @color == 'white' ? '♔' : '♚'
-  end
-
-  def legal_moves
-    all_moves
   end
 
   def all_moves
@@ -62,13 +174,14 @@ end
 
 # An object representing the rook chess piece
 class Rook
+  include Movement
+
   attr_accessor :color, :symbol, :position, :possible_moves, :move_count
 
   def initialize(color, position)
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
   end
 
@@ -76,35 +189,22 @@ class Rook
     @color == 'white' ? '♖' : '♜'
   end
 
-  def legal_moves
-    all_moves
-  end
 
-  def all_moves
-    current_position = @position.dup
-    rows = ('1'..'8').to_a
-    columns = ('A'..'H').to_a
-    moves = []
-    rows.each do |row|
-      moves.push(current_position[0, 1] + row)
-    end
-    columns.each do |column|
-      moves.push(column + current_position[1, 1])
-    end
-    moves.delete(@position)
-    moves
+  def all_moves(position, board)
+    plus(position, board)
   end
 end
 
 # An object representing the bishop chess piece
 class Bishop
+  include Movement
+
   attr_accessor :color, :symbol, :position, :possible_moves, :move_count
 
   def initialize(color, position)
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
   end
 
@@ -112,19 +212,21 @@ class Bishop
     @color == 'white' ? '♗' : '♝'
   end
 
-  def legal_moves
+  def all_moves(position, board)
+    diagonal(position, board)
   end
 end
 
 # An object representing the queen chess piece
 class Queen
+  include Movement
+
   attr_accessor :color, :symbol, :position, :possible_moves, :move_count
 
   def initialize(color, position)
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
   end
 
@@ -132,7 +234,8 @@ class Queen
     @color == 'white' ? '♕' : '♛'
   end
 
-  def legal_moves
+  def all_moves(position, board)
+    plus(position, board) + diagonal(position, board)
   end
 end
 
@@ -144,15 +247,11 @@ class Knight
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
   end
 
   def symbol_selector
     @color == 'white' ? '♘' : '♞'
-  end
-
-  def legal_moves
   end
 end
 
@@ -164,15 +263,11 @@ class Pawn
     @color = color
     @symbol = symbol_selector
     @position = position
-    @possible_moves = legal_moves
     @move_count = 0
   end
 
   def symbol_selector
     @color == 'white' ? '♙' : '♟︎'
-  end
-
-  def legal_moves
   end
 end
 
@@ -278,6 +373,9 @@ class Board
       counter -= 1
     end
     puts ' -----------------'
+  end
+
+  def test_for_path(position)
   end
 end
 
