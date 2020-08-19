@@ -78,7 +78,7 @@ describe Rook do
       expect(result.include?('F7')).to eql(true)
       expect(result.include?('F6')).to eql(true)
       expect(result.include?('F5')).to eql(true)
-      expect(result.include?('F4')).to eql(true)
+      expect(result.include?('F4')).to eql(false)
       expect(result.include?('F3')).to eql(true)
       expect(result.include?('F2')).to eql(true)
       expect(result.include?('F1')).to eql(true)
@@ -89,7 +89,7 @@ describe Rook do
       expect(result.include?('E4')).to eql(true)
       expect(result.include?('G4')).to eql(true)
       expect(result.include?('H4')).to eql(true)
-      expect(result.length).to eql(15)
+      expect(result.length).to eql(14)
     end
   end
 end

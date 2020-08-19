@@ -91,7 +91,8 @@ class Rook
     columns.each do |column|
       moves.push(column + current_position[1, 1])
     end
-    moves.uniq
+    moves.delete(@position)
+    moves
   end
 end
 
@@ -280,3 +281,5 @@ class Board
   end
 end
 
+# board = Board.new('a', 'b')
+# board.show
