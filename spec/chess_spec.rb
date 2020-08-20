@@ -135,6 +135,73 @@ movement_test_grid = {
   'H1' => '*',
 }
 
+pawn_test_grid = {
+  'A8' => '*',
+  'B8' => '*',
+  'C8' => '*',
+  'D8' => '*',
+  'E8' => '*',
+  'F8' => '*',
+  'G8' => '*',
+  'H8' => '*',
+  'A7' => '*',
+  'B7' => '*',
+  'C7' => '*',
+  'D7' => '*',
+  'E7' => '*',
+  'F7' => '*',
+  'G7' => '*',
+  'H7' => '*',
+  'A6' => '*',
+  'B6' => '*',
+  'C6' => '*',
+  'D6' => '*',
+  'E6' => Pawn.new('white', 'E6'),
+  'F6' => '*',
+  'G6' => Pawn.new('black', 'G6'),
+  'H6' => '*',
+  'A5' => '*',
+  'B5' => '*',
+  'C5' => '*',
+  'D5' => '*',
+  'E5' => '*',
+  'F5' => Pawn.new('black', 'F5'),
+  'G5' => '*',
+  'H5' => '*',
+  'A4' => '*',
+  'B4' => '*',
+  'C4' => '*',
+  'D4' => '*',
+  'E4' => '*',
+  'F4' => Pawn.new('black', 'F4'),
+  'G4' => '*',
+  'H4' => '*',
+  'A3' => '*',
+  'B3' => '*',
+  'C3' => '*',
+  'D3' => '*',
+  'E3' => Pawn.new('white', 'E3'),
+  'F3' => '*',
+  'G3' => Pawn.new('black', 'G3'),
+  'H3' => '*',
+  'A2' => '*',
+  'B2' => '*',
+  'C2' => '*',
+  'D2' => '*',
+  'E2' => '*',
+  'F2' => '*',
+  'G2' => '*',
+  'H2' => '*',
+  'A1' => '*',
+  'B1' => '*',
+  'C1' => '*',
+  'D1' => '*',
+  'E1' => '*',
+  'F1' => '*',
+  'G1' => '*',
+  'H1' => '*',
+}
+
 describe King do
   describe '#symbol_selector' do
     it 'sets @symbol as ♔ if @color is white' do
@@ -502,10 +569,22 @@ describe Pawn do
     end
 
     it 'correctly returns all moves on occupied board if in starting position on bottom' do
-      pawn = Pawn.new('black', 'D2')
-      result = pawn.all_moves(pawn.position, blank_grid)
-      expect(result.include?('D3')).to eql(true)
-      expect(result.include?('D4')).to eql(true)
+      pawn = Pawn.new('black', 'F2')
+      result = pawn.all_moves(pawn.position, pawn_test_grid)
+      expect(result.include?('F3')).to eql(true)
+      expect(result.include?('F4')).to eql(false)
+      expect(result.include?('G3')).to eql(false)
+      expect(result.include?('E3')).to eql(true)
+      expect(result.length).to eql(2)
+    end
+
+    it 'correctly returns all moves on occupied board if in starting position on top' do
+      pawn = Pawn.new('black', 'F7')
+      result = pawn.all_moves(pawn.position, pawn_test_grid)
+      expect(result.include?('F6')).to eql(true)
+      expect(result.include?('F5')).to eql(false)
+      expect(result.include?('G6')).to eql(false)
+      expect(result.include?('E6')).to eql(true)
       expect(result.length).to eql(2)
     end
   end

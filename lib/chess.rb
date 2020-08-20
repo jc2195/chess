@@ -515,5 +515,5 @@ class Board
   end
 end
 
-board = Board.new('a', 'b')
-board.show
+# board = Board.new('a', 'b')
+# board.show
