@@ -148,47 +148,70 @@ describe King do
     end
   end
 
-  # describe '#all_moves' do
-  #   it 'correctly returns all moves if not on edge of board' do
-  #     king = King.new('white', 'C5')
-  #     result = king.all_moves
-  #     expect(result.include?('C6')).to eql(true)
-  #     expect(result.include?('D6')).to eql(true)
-  #     expect(result.include?('D5')).to eql(true)
-  #     expect(result.include?('D4')).to eql(true)
-  #     expect(result.include?('C4')).to eql(true)
-  #     expect(result.include?('B4')).to eql(true)
-  #     expect(result.include?('B5')).to eql(true)
-  #     expect(result.include?('B6')).to eql(true)
-  #     expect(result.length).to eql(8)
-  #   end
+  describe '#all_moves' do
+    it 'correctly returns all moves if not on edge of clear board' do
+      king = King.new('white', 'C5')
+      result = king.all_moves(king.position, blank_grid)
+      expect(result.include?('C6')).to eql(true)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('D5')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.include?('C4')).to eql(true)
+      expect(result.include?('B4')).to eql(true)
+      expect(result.include?('B5')).to eql(true)
+      expect(result.include?('B6')).to eql(true)
+      expect(result.length).to eql(8)
+    end
 
-  #   it 'correctly returns all moves if in corner of board' do
-  #     king = King.new('white', 'H8')
-  #     result = king.all_moves
-  #     expect(result.include?('H7')).to eql(true)
-  #     expect(result.include?('G7')).to eql(true)
-  #     expect(result.include?('G8')).to eql(true)
-  #     expect(result.length).to eql(4)
-  #   end
+    it 'correctly returns all moves if in corner of clear board' do
+      king = King.new('white', 'H8')
+      result = king.all_moves(king.position, blank_grid)
+      expect(result.include?('H7')).to eql(true)
+      expect(result.include?('F8')).to eql(true)
+      expect(result.include?('G7')).to eql(true)
+      expect(result.include?('G8')).to eql(true)
+      expect(result.length).to eql(4)
+    end
 
-  #   it 'correctly returns castling moves if on first rank and @castled is false' do
-  #     king = King.new('white', 'D1')
-  #     result = king.all_moves
-  #     expect(result.include?('B1')).to eql(true)
-  #     expect(result.include?('F1')).to eql(true)
-  #     expect(result.length).to eql(7)
-  #   end
+    it 'correctly returns castling moves if on first rank and @castled is false' do
+      king = King.new('white', 'D1')
+      result = king.all_moves(king.position, blank_grid)
+      expect(result.include?('B1')).to eql(true)
+      expect(result.include?('F1')).to eql(true)
+      expect(result.length).to eql(7)
+    end
 
-  #   it 'does not return castling moves if on first rank and @castled is true' do
-  #     king = King.new('white', 'D1')
-  #     king.castled = true
-  #     result = king.all_moves
-  #     expect(result.include?('B1')).to eql(false)
-  #     expect(result.include?('F1')).to eql(false)
-  #     expect(result.length).to eql(5)
-  #   end
-  # end
+    it 'does not return castling moves if on first rank and @castled is true' do
+      king = King.new('white', 'D1')
+      king.castled = true
+      result = king.all_moves(king.position, blank_grid)
+      expect(result.include?('B1')).to eql(false)
+      expect(result.include?('F1')).to eql(false)
+      expect(result.length).to eql(5)
+    end
+
+    it 'correctly returns all moves if on occupied board' do
+      king = King.new('white', 'D5')
+      result = king.all_moves(king.position, movement_test_grid)
+      expect(result.include?('D6')).to eql(false)
+      expect(result.include?('C4')).to eql(true)
+      expect(result.include?('C5')).to eql(true)
+      expect(result.include?('C6')).to eql(true)
+      expect(result.include?('E6')).to eql(true)
+      expect(result.include?('E5')).to eql(true)
+      expect(result.include?('E4')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.length).to eql(7)
+    end
+
+    it 'correctly returns castling moves if on first rank and @castled is false and board is occupied' do
+      king = King.new('white', 'D1')
+      result = king.all_moves(king.position, blank_grid)
+      expect(result.include?('B1')).to eql(true)
+      expect(result.include?('F1')).to eql(true)
+      expect(result.length).to eql(7)
+    end
+  end
 end
 
 describe Rook do

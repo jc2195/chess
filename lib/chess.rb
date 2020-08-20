@@ -133,39 +133,62 @@ class King
     @color == 'white' ? '♔' : '♚'
   end
 
-  def all_moves
-    current_position = @position.dup
+  def all_moves(position, board)
+    current_position = position
     moves = []
+    check_contents = lambda do |pos|
+      if board[pos].is_a?(String)
+        moves.push(pos)
+        true
+      elsif board[pos].color != @color
+        moves.push(pos)
+        false
+      else
+        false
+      end
+    end
     unless current_position[0, 1] == 'H'
-      moves.push(current_position[0, 1].next + current_position[1, 1])
+      pos = current_position[0, 1].next + current_position[1, 1]
+      right_clear = check_contents.call(pos)
     end
     unless current_position[0, 1] == 'A'
-      moves.push((current_position[0, 1].ord - 1).chr + current_position[1, 1])
+      pos = (current_position[0, 1].ord - 1).chr + current_position[1, 1]
+      left_clear = check_contents.call(pos)
     end
     unless current_position[1, 1] == '8'
-      moves.push(current_position[0, 1] + current_position[1, 1].next)
+      pos = current_position[0, 1] + current_position[1, 1].next
+      check_contents.call(pos)
     end
     unless current_position[1, 1] == '1'
-      moves.push(current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s)
+      pos = current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s
+      check_contents.call(pos)
     end
     unless current_position[0, 1] == 'A' || current_position[1, 1] == '8'
-      moves.push((current_position[0, 1].ord - 1).chr + current_position[1, 1].next)
+      pos = (current_position[0, 1].ord - 1).chr + current_position[1, 1].next
+      check_contents.call(pos)
     end
     unless current_position[0, 1] == 'H' || current_position[1, 1] == '8'
-      moves.push(current_position[0, 1].next + current_position[1, 1].next)
+      pos = current_position[0, 1].next + current_position[1, 1].next
+      check_contents.call(pos)
     end
     unless current_position[0, 1] == 'H' || current_position[1, 1] == '1'
-      moves.push(current_position[0, 1].next + (current_position[1, 1].to_i - 1).to_s)
+      pos = current_position[0, 1].next + (current_position[1, 1].to_i - 1).to_s
+      check_contents.call(pos)
     end
     unless current_position[0, 1] == 'A' || current_position[1, 1] == '1'
-      moves.push((current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s)
+      pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
+      check_contents.call(pos)
     end
-    if @castled == false && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
+    if @castled == false && move_count.zero? && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
       unless current_position[0, 1] == 'A' || current_position[0, 1] == 'B'
-        moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
+        if left_clear && board[(current_position[0, 1].ord - 2).chr + current_position[1, 1]].is_a?(String)
+          moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
+        end
       end
       unless current_position[0, 1] == 'G' || current_position[0, 1] == 'H'
-        moves.push((current_position[0, 1].ord + 2).chr + current_position[1, 1])
+        if right_clear && board[(current_position[0, 1].ord + 2).chr + current_position[1, 1]].is_a?(String)
+          moves.push((current_position[0, 1].ord + 2).chr + current_position[1, 1])
+        end
       end
     end
     moves.uniq
