@@ -329,17 +329,81 @@ end
 
 # An object representing the pawn chess piece
 class Pawn
-  attr_accessor :color, :symbol, :position, :possible_moves, :move_count
+  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :start
 
   def initialize(color, position)
     @color = color
     @symbol = symbol_selector
     @position = position
     @move_count = 0
+    @start = determine_direction
   end
 
   def symbol_selector
     @color == 'white' ? '♙' : '♟︎'
+  end
+
+  def determine_direction
+    if @position[1, 1] == '2'
+      'bottom'
+    else
+      'top'
+    end
+  end
+
+  def all_moves(position, board)
+    current_position = position
+    moves = []
+    if @start == 'top'
+      if board[current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s].is_a?(String)
+        moves.push(current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s)
+        pos = current_position[0, 1] + (current_position[1, 1].to_i - 2).to_s
+        if @move_count.zero? && board[pos].is_a?(String)
+          moves.push(pos)
+        end
+      end
+      unless current_position[0, 1] == 'A'
+        pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
+        unless board[pos].is_a?(String)
+          unless board[pos].color == @color
+            moves.push(pos)
+          end
+        end
+      end
+      unless current_position[0, 1] == 'H'
+        pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i - 1).to_s
+        unless board[pos].is_a?(String)
+          unless board[pos].color == @color
+            moves.push(pos)
+          end
+        end
+      end
+    else
+      if board[current_position[0, 1] + (current_position[1, 1].to_i + 1).to_s].is_a?(String)
+        moves.push(current_position[0, 1] + (current_position[1, 1].to_i + 1).to_s)
+        pos = current_position[0, 1] + (current_position[1, 1].to_i + 2).to_s
+        if @move_count.zero? && board[pos].is_a?(String)
+          moves.push(pos)
+        end
+      end
+      unless current_position[0, 1] == 'A'
+        pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i + 1).to_s
+        unless board[pos].is_a?(String)
+          unless board[pos].color == @color
+            moves.push(pos)
+          end
+        end
+      end
+      unless current_position[0, 1] == 'H'
+        pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i + 1).to_s
+        unless board[pos].is_a?(String)
+          unless board[pos].color == @color
+            moves.push(pos)
+          end
+        end
+      end
+    end
+    moves
   end
 end
 
@@ -441,7 +505,7 @@ class Board
         value = @grid[(letter + counter.to_s)]
         print "#{value.is_a?(String) ? value : value.symbol} "
       end
-      puts "| #{counter.to_s}"
+      puts "| #{counter}"
       counter -= 1
     end
     puts ' -----------------'
@@ -451,5 +515,5 @@ class Board
   end
 end
 
-# board = Board.new('a', 'b')
-# board.show
+board = Board.new('a', 'b')
+board.show

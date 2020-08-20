@@ -471,4 +471,42 @@ describe Pawn do
       expect(pawn.symbol).to eql('♟︎')
     end
   end
+
+  describe '#start' do
+    it 'correctly returns top when pawn is initialized on row 7' do
+      pawn = Pawn.new('white', 'A7')
+      expect(pawn.start).to eql('top')
+    end
+
+    it 'correctly returns bottom when pawn is initialized on row 2' do
+      pawn = Pawn.new('white', 'A2')
+      expect(pawn.start).to eql('bottom')
+    end
+  end
+
+  describe '#all_moves' do
+    it 'correctly returns all moves on blank board if in starting position on bottom' do
+      pawn = Pawn.new('black', 'D2')
+      result = pawn.all_moves(pawn.position, blank_grid)
+      expect(result.include?('D3')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.length).to eql(2)
+    end
+
+    it 'correctly returns all moves on blank board if in starting position on top' do
+      pawn = Pawn.new('black', 'D7')
+      result = pawn.all_moves(pawn.position, blank_grid)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('D5')).to eql(true)
+      expect(result.length).to eql(2)
+    end
+
+    it 'correctly returns all moves on occupied board if in starting position on bottom' do
+      pawn = Pawn.new('black', 'D2')
+      result = pawn.all_moves(pawn.position, blank_grid)
+      expect(result.include?('D3')).to eql(true)
+      expect(result.include?('D4')).to eql(true)
+      expect(result.length).to eql(2)
+    end
+  end
 end
