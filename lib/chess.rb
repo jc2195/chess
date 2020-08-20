@@ -276,6 +276,55 @@ class Knight
   def symbol_selector
     @color == 'white' ? '♘' : '♞'
   end
+
+  def all_moves(position, board)
+    current_position = position
+    moves = []
+    check_contents = lambda do |pos|
+      if board[pos].is_a?(String)
+        moves.push(pos)
+        true
+      elsif board[pos].color != @color
+        moves.push(pos)
+        false
+      else
+        false
+      end
+    end
+    unless current_position[0, 1] == 'A' || %w[7 8].include?(current_position[1, 1])
+      pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i + 2).to_s
+      check_contents.call(pos)
+    end
+    unless current_position[0, 1] == 'H' || %w[7 8].include?(current_position[1, 1])
+      pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i + 2).to_s
+      check_contents.call(pos)
+    end
+    unless %w[G H].include?(current_position[0, 1]) || current_position[1, 1] == '8'
+      pos = (current_position[0, 1].ord + 2).chr + (current_position[1, 1].to_i + 1).to_s
+      check_contents.call(pos)
+    end
+    unless %w[G H].include?(current_position[0, 1]) || current_position[1, 1] == '1'
+      pos = (current_position[0, 1].ord + 2).chr + (current_position[1, 1].to_i - 1).to_s
+      check_contents.call(pos)
+    end
+    unless current_position[0, 1] == 'H' || %w[1 2].include?(current_position[1, 1])
+      pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i - 2).to_s
+      check_contents.call(pos)
+    end
+    unless current_position[0, 1] == 'A' || %w[1 2].include?(current_position[1, 1])
+      pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 2).to_s
+      check_contents.call(pos)
+    end
+    unless %w[A B].include?(current_position[0, 1]) || current_position[1, 1] == '1'
+      pos = (current_position[0, 1].ord - 2).chr + (current_position[1, 1].to_i - 1).to_s
+      check_contents.call(pos)
+    end
+    unless %w[A B].include?(current_position[0, 1]) || current_position[1, 1] == '8'
+      pos = (current_position[0, 1].ord - 2).chr + (current_position[1, 1].to_i + 1).to_s
+      check_contents.call(pos)
+    end
+    moves
+  end
 end
 
 # An object representing the pawn chess piece

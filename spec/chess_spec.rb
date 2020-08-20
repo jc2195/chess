@@ -416,6 +416,47 @@ describe Knight do
       expect(knight.symbol).to eql('♞')
     end
   end
+
+  describe '#all_moves' do
+    it 'correctly returns all moves on blank board' do
+      knight = Knight.new('black', 'F4')
+      result = knight.all_moves(knight.position, blank_grid)
+      expect(result.include?('E6')).to eql(true)
+      expect(result.include?('G6')).to eql(true)
+      expect(result.include?('H5')).to eql(true)
+      expect(result.include?('H3')).to eql(true)
+      expect(result.include?('G2')).to eql(true)
+      expect(result.include?('E2')).to eql(true)
+      expect(result.include?('D3')).to eql(true)
+      expect(result.include?('D5')).to eql(true)
+      expect(result.include?('F4')).to eql(false)
+      expect(result.length).to eql(8)
+    end
+
+    it 'correctly returns all moves if on occupied board' do
+      knight = Knight.new('black', 'C4')
+      result = knight.all_moves(knight.position, movement_test_grid)
+      expect(result.include?('B6')).to eql(true)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('E5')).to eql(true)
+      expect(result.include?('E3')).to eql(true)
+      expect(result.include?('D2')).to eql(false)
+      expect(result.include?('B2')).to eql(true)
+      expect(result.include?('A3')).to eql(true)
+      expect(result.include?('A5')).to eql(true)
+      expect(result.include?('C4')).to eql(false)
+      expect(result.length).to eql(7)
+    end
+
+    it 'correctly returns all moves if on edge of blank board' do
+      knight = Knight.new('black', 'B1')
+      result = knight.all_moves(knight.position, blank_grid)
+      expect(result.include?('A3')).to eql(true)
+      expect(result.include?('C3')).to eql(true)
+      expect(result.include?('D2')).to eql(true)
+      expect(result.length).to eql(3)
+    end
+  end
 end
 
 describe Pawn do
