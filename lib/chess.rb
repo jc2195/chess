@@ -409,12 +409,13 @@ end
 
 # An object representing the game board, containing all information about whats on it
 class Board
-  attr_accessor :black, :white, :grid
+  attr_accessor :black, :white, :grid, :current_player
 
   def initialize(black, white)
     @black = black
     @white = white
     @grid = make_grid
+    @current_player = 'white'
   end
 
   def make_grid
@@ -511,9 +512,50 @@ class Board
     puts ' -----------------'
   end
 
-  def test_for_path(position)
+  def ask_for_position
+    correct_input = false
+    until correct_input
+      print 'Position: '
+      input = gets.chomp.upcase
+      if @grid.keys.include?(input)
+        correct_input = true
+      else
+        puts 'PLEASE ENTER A VALID POSITION IN THE FORM <LETTER><NUMBER> eg. A1'
+      end
+    end
+    input
+  end
+
+  def valid_origin_type(position)
+    if @grid[position].is_a?(String)
+      false
+    else
+      @grid[position].color == @current_player
+    end
+  end
+
+  def fetch_origin
+    valid = false
+    until valid
+      chosen_position = ask_for_position
+      if valid_origin_type(chosen_position)
+        if @grid[chosen_position].all_moves(chosen_position, @grid).empty?
+          puts 'THAT CHESS PIECE DOES NOT HAVE ANY LEGAL MOVES'
+        else
+          valid = true
+        end
+      else
+        puts 'PLEASE SELECT A POSITION WHICH CURRENTLY CONTAINS A CHESS PIECE OF YOUR COLOR'
+      end
+    end
+    chosen_position
+  end
+
+  def check
+    
   end
 end
 
-# board = Board.new('a', 'b')
-# board.show
+board = Board.new('a', 'b')
+board.show
+board.fetch_origin
