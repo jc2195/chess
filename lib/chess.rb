@@ -537,6 +537,7 @@ class Board
   def fetch_origin
     valid = false
     until valid
+      puts "#{@current_player.capitalize}, please select a chess piece to move"
       chosen_position = ask_for_position
       if valid_origin_type(chosen_position)
         if @grid[chosen_position].all_moves(chosen_position, @grid).empty?
@@ -555,13 +556,10 @@ class Board
     valid = false
     moves = @grid[origin].all_moves(origin, @grid)
     until valid
+      puts 'Where would you like to move this chess piece?'
       chosen_position = ask_for_position
       if moves.include?(chosen_position)
-        if check(origin, chosen_position)
-          puts 'MOVE IS NOT ALLOWED AS IT WILL PUT YOU IN CHECK'
-        else
-          valid = true
-        end
+        valid = true
       else
         puts 'THIS IS NOT A LEGAL MOVE FOR THIS PIECE'
       end
@@ -594,15 +592,26 @@ class Board
     end
     in_check
   end
+
+  def move
+    valid_move = false
+    until valid_move
+      origin = fetch_origin
+      puts "\n"
+      destination = fetch_destination(origin)
+      if check(origin, destination)
+        puts "THAT MOVE IS NOT ALLOWED AS IT WOULD PUT YOUR KING IN CHECK\n"
+      else
+        valid_move = true
+      end
+    end
+    @grid[destination] = @grid[origin]
+    @grid[destination].position = destination
+    @grid[origin] = '*'
+  end
 end
 
-# board = Board.new('a', 'b')
-# board.grid.each do |key, value|
-#   unless value.is_a?(String)
-#     if value.is_a?(King) && value.color == board.current_player
-#       puts key
-#     end
-#   end
-# end
-# board.show
-# board.fetch_origin
+board = Board.new('a', 'b')
+board.show
+board.move
+board.show
