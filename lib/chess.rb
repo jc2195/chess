@@ -551,11 +551,58 @@ class Board
     chosen_position
   end
 
-  def check
-    
+  def fetch_destination(origin)
+    valid = false
+    moves = @grid[origin].all_moves(origin, @grid)
+    until valid
+      chosen_position = ask_for_position
+      if moves.include?(chosen_position)
+        if check(origin, chosen_position)
+          puts 'MOVE IS NOT ALLOWED AS IT WILL PUT YOU IN CHECK'
+        else
+          valid = true
+        end
+      else
+        puts 'THIS IS NOT A LEGAL MOVE FOR THIS PIECE'
+      end
+    end
+    chosen_position
+  end
+
+  def check(origin, destination)
+    in_check = false
+    temp_board = @grid.dup
+    temp_board[destination] = temp_board[origin]
+    temp_board[destination].position = destination
+    temp_board[origin] = '*'
+    king_position = nil
+    temp_board.each do |key, value|
+      unless value.is_a?(String)
+        if value.is_a?(King) && value.color == @current_player
+          king_position = key
+        end
+      end
+    end
+    temp_board.each_value do |value|
+      unless value.is_a?(String)
+        unless value.color == @current_player
+          if value.all_moves(value.position, temp_board).include?(king_position)
+            in_check = true
+          end
+        end
+      end
+    end
+    in_check
   end
 end
 
-board = Board.new('a', 'b')
-board.show
-board.fetch_origin
+# board = Board.new('a', 'b')
+# board.grid.each do |key, value|
+#   unless value.is_a?(String)
+#     if value.is_a?(King) && value.color == board.current_player
+#       puts key
+#     end
+#   end
+# end
+# board.show
+# board.fetch_origin
