@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'pry'
 
 # A module for various movement functions which are reused by different chess pieces
 module Movement
@@ -126,7 +127,6 @@ class King
     @symbol = symbol_selector
     @position = position
     @move_count = 0
-    @castled = false
   end
 
   def symbol_selector
@@ -179,7 +179,7 @@ class King
       pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
       check_contents.call(pos)
     end
-    if @castled == false && move_count.zero? && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
+    if move_count.zero? && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
       unless current_position[0, 1] == 'A' || current_position[0, 1] == 'B'
         if left_clear && board[(current_position[0, 1].ord - 2).chr + current_position[1, 1]].is_a?(String)
           moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
@@ -350,6 +350,8 @@ class Pawn
       'top'
     end
   end
+
+
 
   def all_moves(position, board)
     current_position = position
@@ -570,9 +572,10 @@ class Board
   def check(origin, destination)
     in_check = false
     temp_board = @grid.dup
-    temp_board[destination] = temp_board[origin]
-    temp_board[destination].position = destination
+    piece = temp_board[origin]
     temp_board[origin] = '*'
+    temp_board[destination] = piece
+    temp_board[destination].position = destination
     king_position = nil
     temp_board.each do |key, value|
       unless value.is_a?(String)
@@ -608,10 +611,44 @@ class Board
     @grid[destination] = @grid[origin]
     @grid[destination].position = destination
     @grid[origin] = '*'
+    @grid[destination].move_count += 1
   end
 
   def checkmate
     in_checkmate = true
+    king_position = king_location
+    king_moves = @grid[king_position].all_moves(king_position, @grid)
+    if check(king_position, king_position)
+      king_moves.each do |destination|
+        if check(king_position, destination) == false
+          in_checkmate = false
+        end
+      end
+    else
+      in_checkmate = false
+    end
+    in_checkmate
+  end
+
+  def stalemate
+    in_stalemate = true
+    @grid.each do |key, value|
+      unless value.is_a?(String)
+        if value.color == @current_player
+          moves = value.all_moves(key, @grid)
+          moves.each do |destination|
+            unless check(key, destination)
+              in_stalemate = false
+              break
+            end
+          end
+        end
+      end
+    end
+    in_stalemate
+  end
+
+  def king_location
     king_position = nil
     @grid.each do |key, value|
       unless value.is_a?(String)
@@ -620,13 +657,59 @@ class Board
         end
       end
     end
-    king_moves = @grid[king_position].all_moves(king_position, @grid)
-    king_moves.each do |destination|
-      if check(king_position, destination) == false
-        in_checkmate = false
+    king_position
+  end
+
+  def promotion_check
+    top_row = %w[A8 B8 C8 D8 E8 F8 G8 H8]
+    bottom_row = %w[A1 B1 C1 D1 E1 F1 G1 H1]
+    top_row.each do |position|
+      item = @grid[position]
+      if item.is_a?(Pawn)
+        if item.start == 'bottom'
+          promote(position)
+        end
       end
     end
-    in_checkmate
+    bottom_row.each do |position|
+      item = @grid[position]
+      if item.is_a?(Pawn)
+        if item.start == 'top'
+          promote(position)
+        end
+      end
+    end
+  end
+
+  def promote(position)
+    puts "The pawn at #{position} needs to be promoted"
+    chess_piece = ask_for_promotion
+    case chess_piece
+    when 'queen'
+      @grid[position] = Queen.new(@current_player, position)
+    when 'rook'
+      @grid[position] = Rook.new(@current_player, position)
+    when 'bishop'
+      @grid[position] = Bishop.new(@current_player, position)
+    when 'knight'
+      @grid[position] = Knight.new(@current_player, position)
+    end
+  end
+
+  def ask_for_promotion
+    puts 'What chess piece would you like to promote the pawn to?'
+    puts 'Your options are: Queen, Rook, Bishop or Knight'
+    correct_input = false
+    until correct_input
+      print 'Chess piece: '
+      input = gets.chomp.downcase
+      if %w[queen rook bishop knight].include?(input)
+        correct_input = true
+      else
+        puts 'PLEASE ENTER A VALID CHESSPIECE (Queen, Rook, Bishop or Knight)'
+      end
+    end
+    input
   end
 end
 

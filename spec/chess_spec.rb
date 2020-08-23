@@ -336,6 +336,73 @@ checkmate_grid = {
   'H1' => '*'
 }
 
+stalemate_grid = {
+  'A8' => '*',
+  'B8' => '*',
+  'C8' => '*',
+  'D8' => '*',
+  'E8' => '*',
+  'F8' => '*',
+  'G8' => '*',
+  'H8' => '*',
+  'A7' => '*',
+  'B7' => '*',
+  'C7' => '*',
+  'D7' => '*',
+  'E7' => '*',
+  'F7' => '*',
+  'G7' => King.new('black', 'G7'),
+  'H7' => '*',
+  'A6' => '*',
+  'B6' => '*',
+  'C6' => '*',
+  'D6' => '*',
+  'E6' => '*',
+  'F6' => '*',
+  'G6' => '*',
+  'H6' => '*',
+  'A5' => '*',
+  'B5' => Pawn.new('black', 'B5'),
+  'C5' => '*',
+  'D5' => '*',
+  'E5' => Pawn.new('black', 'E5'),
+  'F5' => '*',
+  'G5' => '*',
+  'H5' => Pawn.new('black', 'H5'),
+  'A4' => '*',
+  'B4' => Pawn.new('white', 'B4'),
+  'C4' => '*',
+  'D4' => '*',
+  'E4' => Pawn.new('white', 'E4'),
+  'F4' => Knight.new('black', 'F4'),
+  'G4' => '*',
+  'H4' => Pawn.new('white', 'H4'),
+  'A3' => '*',
+  'B3' => '*',
+  'C3' => '*',
+  'D3' => '*',
+  'E3' => '*',
+  'F3' => Pawn.new('white', 'F3'),
+  'G3' => Queen.new('black', 'G3'),
+  'H3' => '*',
+  'A2' => '*',
+  'B2' => '*',
+  'C2' => '*',
+  'D2' => '*',
+  'E2' => Rook.new('black', 'E2'),
+  'F2' => '*',
+  'G2' => '*',
+  'H2' => '*',
+  'A1' => '*',
+  'B1' => '*',
+  'C1' => '*',
+  'D1' => '*',
+  'E1' => '*',
+  'F1' => '*',
+  'G1' => '*',
+  'H1' => King.new('white', 'H1')
+}
+
 describe King do
   describe '#symbol_selector' do
     it 'sets @symbol as ♔ if @color is white' do
@@ -374,7 +441,7 @@ describe King do
       expect(result.length).to eql(4)
     end
 
-    it 'correctly returns castling moves if on first rank and @castled is false' do
+    it 'correctly returns castling moves if on first rank and @move_count is 0' do
       king = King.new('white', 'D1')
       result = king.all_moves(king.position, blank_grid)
       expect(result.include?('B1')).to eql(true)
@@ -382,9 +449,9 @@ describe King do
       expect(result.length).to eql(7)
     end
 
-    it 'does not return castling moves if on first rank and @castled is true' do
+    it 'does not return castling moves if on first rank and @move_count is greater than 0' do
       king = King.new('white', 'D1')
-      king.castled = true
+      king.move_count = 1
       result = king.all_moves(king.position, blank_grid)
       expect(result.include?('B1')).to eql(false)
       expect(result.include?('F1')).to eql(false)
@@ -725,38 +792,76 @@ describe Pawn do
 end
 
 describe Board do
-  describe '#check' do
-    it 'returns true if current player is in check' do
+  # describe '#check' do
+  #   it 'returns true if current player is in check' do
+  #     board = Board.new('a', 'b')
+  #     board.grid = check_grid
+  #     board.current_player = 'black'
+  #     result = board.check('A5', 'A6')
+  #     expect(result).to eql(true)
+  #   end
+
+  #   it 'returns false if current player is not in check' do
+  #     board = Board.new('a', 'b')
+  #     board.grid = check_grid
+  #     board.current_player = 'black'
+  #     result = board.check('C8', 'B8')
+  #     expect(result).to eql(false)
+  #   end
+  # end
+
+  # describe '#checkmate' do
+  #   it 'returns true if the current player is in checkmate' do
+  #     board = Board.new('a', 'b')
+  #     board.grid = checkmate_grid
+  #     board.current_player = 'black'
+  #     result = board.checkmate
+  #     expect(result).to eql(true)
+  #   end
+
+  #   it 'returns false if the current player is not in checkmate' do
+  #     board = Board.new('a', 'b')
+  #     board.grid = check_grid
+  #     board.current_player = 'black'
+  #     result = board.checkmate
+  #     expect(result).to eql(false)
+  #   end
+
+  #   it 'returns false if the current player is not in checkmate but is in stalemate' do
+  #     board = Board.new('a', 'b')
+  #     board.grid = stalemate_grid
+  #     result = board.checkmate
+  #     expect(result).to eql(false)
+  #   end
+  # end
+
+  describe '#stalemate' do
+    it 'returns true if the current player is in stalemate' do
       board = Board.new('a', 'b')
-      board.grid = check_grid
-      board.current_player = 'black'
-      result = board.check('A5', 'A6')
+      board.grid = stalemate_grid
+      board.grid['B5'].start = 'top'
+      board.grid['E5'].start = 'top'
+      board.grid['H5'].start = 'top'
+      board.grid['B4'].start = 'bottom'
+      board.grid['E4'].start = 'bottom'
+      board.grid['H4'].start = 'bottom'
+      board.grid['F3'].start = 'bottom'
+      board.grid['B5'].move_count = 5
+      board.grid['E5'].move_count = 5
+      board.grid['H5'].move_count = 5
+      board.grid['B4'].move_count = 5
+      board.grid['E4'].move_count = 5
+      board.grid['H4'].move_count = 5
+      board.grid['F3'].move_count = 5
+      board.grid['H1'].move_count = 5
+      result = board.stalemate
       expect(result).to eql(true)
     end
 
-    it 'returns false if current player is not in check' do
+    it 'returns false if the current player is not in stalemate' do
       board = Board.new('a', 'b')
       board.grid = check_grid
-      board.current_player = 'black'
-      result = board.check('C8', 'B8')
-      expect(result).to eql(false)
-    end
-  end
-
-  describe '#checkmate' do
-    it 'returns true if the current player is in checkmate' do
-      board = Board.new('a', 'b')
-      board.grid = checkmate_grid
-      board.current_player = 'black'
-      result = board.checkmate
-      expect(result).to eql(true)
-    end
-
-    it 'returns false if the current player is not in checkmate' do
-      board = Board.new('a', 'b')
-      board.grid = check_grid
-      board.current_player = 'black'
-      result = board.checkmate
+      result = board.stalemate
       expect(result).to eql(false)
     end
   end
