@@ -609,9 +609,28 @@ class Board
     @grid[destination].position = destination
     @grid[origin] = '*'
   end
+
+  def checkmate
+    in_checkmate = true
+    king_position = nil
+    @grid.each do |key, value|
+      unless value.is_a?(String)
+        if value.is_a?(King) && value.color == @current_player
+          king_position = key
+        end
+      end
+    end
+    king_moves = @grid[king_position].all_moves(king_position, @grid)
+    king_moves.each do |destination|
+      if check(king_position, destination) == false
+        in_checkmate = false
+      end
+    end
+    in_checkmate
+  end
 end
 
-board = Board.new('a', 'b')
-board.show
-board.move
-board.show
+# board = Board.new('a', 'b')
+# board.show
+# board.move
+# board.show
