@@ -495,7 +495,7 @@ end
 class Board
   require 'json'
 
-  attr_accessor :black, :white, :grid, :current_player, :last_move
+  attr_accessor :black, :white, :grid, :current_player, :last_move, :game_type
 
   def initialize(black = nil, white = nil)
     @black = black
@@ -503,6 +503,7 @@ class Board
     @grid = make_grid
     @current_player = 'white'
     @last_move = nil
+    @game_type = nil
   end
 
   def make_grid
@@ -723,6 +724,36 @@ class Board
     end
   end
 
+  def computer_move
+    available_origins = []
+    @grid.each do |key, value|
+      unless value.is_a?(String)
+        if value.color == @current_player
+          available_origins.push(key)
+        end
+      end
+    end
+    all_moves = []
+    available_origins.each do |origin|
+      @grid[origin].all_moves(origin, @grid).each do |destination|
+        unless check(origin, destination)
+          unless (@grid[origin].is_a?(King) && @grid[origin].castling_moves.include?(destination)) ||
+                 (@grid[origin].is_a?(Pawn) && @grid[origin].en_passant_moves.include?(destination))
+            all_moves.push([origin, destination])
+          end
+        end
+      end
+    end
+    move_selector = Random.new.rand(all_moves.length)
+    origin = all_moves[move_selector][0]
+    destination = all_moves[move_selector][1]
+    @grid[destination] = @grid[origin]
+    @grid[destination].position = destination
+    @grid[origin] = '*'
+    @grid[destination].move_count += 1
+    @last_move = destination
+  end
+
   def castling(origin, destination)
     complete = false
     if %w[A B C D].include?(destination[0, 1])
@@ -845,6 +876,27 @@ class Board
     puts "\n\n"
   end
 
+  def computer_promote
+    top_row = %w[A8 B8 C8 D8 E8 F8 G8 H8]
+    bottom_row = %w[A1 B1 C1 D1 E1 F1 G1 H1]
+    top_row.each do |position|
+      item = @grid[position]
+      if item.is_a?(Pawn)
+        if item.start == 'bottom'
+          @grid[position] = Queen.new(@current_player, position)
+        end
+      end
+    end
+    bottom_row.each do |position|
+      item = @grid[position]
+      if item.is_a?(Pawn)
+        if item.start == 'top'
+          @grid[position] = Queen.new(@current_player, position)
+        end
+      end
+    end
+  end
+
   def ask_for_promotion
     puts 'What chess piece would you like to promote the pawn to?'
     puts 'Your options are: Queen, Rook, Bishop or Knight'
@@ -867,7 +919,8 @@ class Board
       white: @white,
       grid: @grid,
       current_player: @current_player,
-      last_move: @last_move
+      last_move: @last_move,
+      game_type: @game_type
     }
     Marshal.dump(data)
   end
@@ -896,7 +949,9 @@ class Board
     @grid = contents[:grid]
     @current_player = contents[:current_player]
     @last_move = contents[:last_move]
-    puts "Game has been loaded from Save File #{file_name[-5]}!"
+    @game_type = contents[:game_type]
+    game_type_wording = @game_type == '1' ? 'Player vs Player' : 'Player vs Computer'
+    puts "#{game_type_wording} game has been loaded from Save File #{file_name[-5]}!"
     puts "\n\n"
   end
 
@@ -939,6 +994,26 @@ class Board
     option
   end
 
+  def ask_game_type
+    puts 'What type of game do you want to play?'
+    puts ''
+    puts '1. Player vs Player'
+    puts '2. Player vs Computer'
+    puts ''
+    correct_input = 0
+    until correct_input == 1
+      print 'Enter a number: '
+      option = gets.chomp
+      if %w[1 2].include?(option)
+        correct_input = 1
+      else
+        puts 'PLEASE ENTER 1 OR 2'
+      end
+    end
+    puts "\n\n"
+    option
+  end
+
   def ask_play_again
     correct_input = 0
     until correct_input == 1
@@ -954,7 +1029,7 @@ class Board
     option
   end
 
-  def set_name
+  def set_name_1
     puts 'Who wants to play as black?'
     print 'Name: '
     @black = gets.chomp
@@ -965,6 +1040,35 @@ class Board
     puts "\n\n"
   end
 
+  def set_name_2
+    puts 'What color do you want to play as?'
+    puts ''
+    puts '1. White'
+    puts '2. Black'
+    puts ''
+    correct_input = 0
+    until correct_input == 1
+      print 'Enter a number: '
+      option = gets.chomp
+      if %w[1 2].include?(option)
+        correct_input = 1
+      else
+        puts 'PLEASE ENTER 1 OR 2'
+      end
+    end
+    puts "\n\n"
+    puts 'What is your name?'
+    print 'Name: '
+    name = gets.chomp
+    if option == '1'
+      @white = name
+      @black = 'Computer'
+    else
+      @black = name
+      @white = 'Computer'
+    end
+  end
+
   def reset
     @black = black
     @white = white
@@ -973,16 +1077,60 @@ class Board
     @last_move = nil
   end
 
-  def round
+  def round_game_1
     show
     move
     puts "\n\n"
     promotion_check
   end
 
+  def round_game_2
+    player = if @current_player == 'white'
+               if @white == 'Computer'
+                 'Computer'
+               else
+                 'Person'
+               end
+             else
+               if @black == 'Computer'
+                 'Computer'
+               else
+                 'Person'
+               end
+             end
+    if player == 'Person'
+      show
+      move
+      puts "\n\n"
+      promotion_check
+    else
+      computer_move
+      computer_promote
+    end
+  end
+
   def play
     choice = ask_menu_option
-    choice == '1' ? set_name : load
+    if choice == '1'
+      @game_type = ask_game_type
+      if game_type == '1'
+        set_name_1
+        game_1
+      else
+        set_name_2
+        game_2
+      end
+    else
+      load
+      if game_type == '1'
+        game_1
+      else
+        game_2
+      end
+    end
+  end
+
+  def game_1
     continue = true
     while continue == true
       endgame = false
@@ -999,14 +1147,47 @@ class Board
           puts 'The game is a draw!'
           endgame = true
         else
-          round
+          round_game_1
           @current_player = @current_player == 'white' ? 'black' : 'white'
         end
         puts "\n\n"
       end
       if ask_play_again == 'y'
         reset
-        set_name
+        set_name_1
+      else
+        continue = false
+        puts 'Goodbye!'
+        puts "\n\n"
+      end
+    end
+  end
+
+  def game_2
+    continue = true
+    while continue == true
+      endgame = false
+      until endgame
+        if checkmate
+          if @current_player == 'white'
+            puts "White is in checkmate! Black (#{@black}) is the winner!"
+          else
+            puts "Black is in checkmate! White (#{@white}) is the winner!"
+          end
+          endgame = true
+        elsif stalemate
+          puts "#{@current_player.capitalize} has no legal moves but is not in check."
+          puts 'The game is a draw!'
+          endgame = true
+        else
+          round_game_2
+          @current_player = @current_player == 'white' ? 'black' : 'white'
+        end
+        puts "\n\n"
+      end
+      if ask_play_again == 'y'
+        reset
+        set_name_2
       else
         continue = false
         puts 'Goodbye!'
