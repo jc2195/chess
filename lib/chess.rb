@@ -493,9 +493,11 @@ end
 
 # An object representing the game board, containing all information about whats on it
 class Board
+  require 'json'
+
   attr_accessor :black, :white, :grid, :current_player, :last_move
 
-  def initialize(black, white)
+  def initialize(black = nil, white = nil)
     @black = black
     @white = white
     @grid = make_grid
@@ -581,11 +583,12 @@ class Board
   end
 
   def show
-    puts '  A B C D E F G H'
-    puts ' -----------------'
+    puts '    A B C D E F G H'
+    puts '   -----------------'
     letters = ('A'..'H').to_a
     counter = 8
     until counter.zero?
+      print "#{counter} "
       print '| '
       letters.each do |letter|
         value = @grid[(letter + counter.to_s)]
@@ -594,7 +597,9 @@ class Board
       puts "| #{counter}"
       counter -= 1
     end
-    puts ' -----------------'
+    puts '   -----------------'
+    puts '    A B C D E F G H'
+    puts "\n\n"
   end
 
   def ask_for_position
@@ -604,6 +609,11 @@ class Board
       input = gets.chomp.upcase
       if @grid.keys.include?(input)
         correct_input = true
+      elsif input == 'SAVE'
+        puts "\n\n"
+        save
+        show
+        puts "#{@current_player.capitalize}, please select a chess piece to move"
       else
         puts 'PLEASE ENTER A VALID POSITION IN THE FORM <LETTER><NUMBER> eg. A1'
       end
@@ -820,6 +830,7 @@ class Board
 
   def promote(position)
     puts "The pawn at #{position} needs to be promoted"
+    puts "\n\n"
     chess_piece = ask_for_promotion
     case chess_piece
     when 'queen'
@@ -831,6 +842,7 @@ class Board
     when 'knight'
       @grid[position] = Knight.new(@current_player, position)
     end
+    puts "\n\n"
   end
 
   def ask_for_promotion
@@ -848,8 +860,161 @@ class Board
     end
     input
   end
+
+  def serialize
+    data = {
+      black: @black,
+      white: @white,
+      grid: @grid,
+      current_player: @current_player,
+      last_move: @last_move
+    }
+    Marshal.dump(data)
+  end
+
+  def unserialize(string)
+    data = Marshal.load(string)
+    data
+  end
+
+  def save
+    file_name = ask_save_file
+    save_file = File.open(file_name, 'w')
+    save_file.puts(serialize)
+    save_file.close
+    puts "Game has been saved to Save File #{file_name[-5]}!"
+    puts "\n\n"
+  end
+
+  def load
+    file_name = ask_save_file
+    save_file = File.open(file_name, 'r')
+    save_file.pos = 0
+    contents = unserialize(save_file.read)
+    @black = contents[:black]
+    @white = contents[:white]
+    @grid = contents[:grid]
+    @current_player = contents[:current_player]
+    @last_move = contents[:last_move]
+    puts "Game has been loaded from Save File #{file_name[-5]}!"
+    puts "\n\n"
+  end
+
+  def ask_save_file
+    puts 'What save file would you like to use?'
+    puts ''
+    puts '1  2  3  4  5'
+    puts ''
+    correct_input = false
+    until correct_input == true
+      print 'Save file number: '
+      save_file = gets.chomp
+      if %w[1 2 3 4 5].include?(save_file)
+        correct_input = true
+      else
+        puts 'PLEASE ENTER A NUMBER FROM 1-3'
+      end
+    end
+    puts "\n\n"
+    "save/save_file_#{save_file}.txt"
+  end
+
+  def ask_menu_option
+    puts 'What would you like to do?'
+    puts ''
+    puts '1. Start New Game'
+    puts '2. Load Game From Save File'
+    puts ''
+    correct_input = 0
+    until correct_input == 1
+      print 'Enter a number: '
+      option = gets.chomp
+      if %w[1 2].include?(option)
+        correct_input = 1
+      else
+        puts 'PLEASE ENTER 1 OR 2'
+      end
+    end
+    puts "\n\n"
+    option
+  end
+
+  def ask_play_again
+    correct_input = 0
+    until correct_input == 1
+      print 'Do you want to play again? (y/n): '
+      option = gets.chomp.downcase
+      if %w[y n].include?(option)
+        correct_input = 1
+      else
+        puts 'PLEASE ENTER Y OR N'
+      end
+    end
+    puts "\n\n"
+    option
+  end
+
+  def set_name
+    puts 'Who wants to play as black?'
+    print 'Name: '
+    @black = gets.chomp
+    puts "\n\n"
+    puts 'Who wants to play as white?'
+    print 'Name: '
+    @white = gets.chomp
+    puts "\n\n"
+  end
+
+  def reset
+    @black = black
+    @white = white
+    @grid = make_grid
+    @current_player = 'white'
+    @last_move = nil
+  end
+
+  def round
+    show
+    move
+    puts "\n\n"
+    promotion_check
+  end
+
+  def play
+    choice = ask_menu_option
+    choice == '1' ? set_name : load
+    continue = true
+    while continue == true
+      endgame = false
+      until endgame
+        if checkmate
+          if @current_player == 'white'
+            puts "White is in checkmate! Black (#{@black}) is the winner!"
+          else
+            puts "Black is in checkmate! White (#{@white}) is the winner!"
+          end
+          endgame = true
+        elsif stalemate
+          puts "#{@current_player.capitalize} has no legal moves but is not in check."
+          puts 'The game is a draw!'
+          endgame = true
+        else
+          round
+          @current_player = @current_player == 'white' ? 'black' : 'white'
+        end
+        puts "\n\n"
+      end
+      if ask_play_again == 'y'
+        reset
+        set_name
+      else
+        continue = false
+        puts 'Goodbye!'
+        puts "\n\n"
+      end
+    end
+  end
 end
 
-# board = Board.new('a', 'b')
-# board.show
-# board.move
+game = Board.new
+game.play
