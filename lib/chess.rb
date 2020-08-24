@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'pry'
 
 # A module for various movement functions which are reused by different chess pieces
 module Movement
