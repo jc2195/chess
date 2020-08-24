@@ -120,13 +120,14 @@ end
 
 # An object representing the king chess piece
 class King
-  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :castled
+  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :castling_moves
 
   def initialize(color, position)
     @color = color
     @symbol = symbol_selector
     @position = position
     @move_count = 0
+    @castling_moves = []
   end
 
   def symbol_selector
@@ -136,6 +137,7 @@ class King
   def all_moves(position, board)
     current_position = position
     moves = []
+    @castling_moves = []
     check_contents = lambda do |pos|
       if board[pos].is_a?(String)
         moves.push(pos)
@@ -179,19 +181,46 @@ class King
       pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
       check_contents.call(pos)
     end
-    if move_count.zero? && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
+    if @move_count.zero? && (current_position[1, 1] == '1' || current_position[1, 1] == '8')
       unless current_position[0, 1] == 'A' || current_position[0, 1] == 'B'
-        if left_clear && board[(current_position[0, 1].ord - 2).chr + current_position[1, 1]].is_a?(String)
+        proposed_position = (current_position[0, 1].ord - 2).chr + current_position[1, 1]
+        if left_clear && board[proposed_position].is_a?(String) && check_rooks(proposed_position, board)
           moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
+          @castling_moves.push((current_position[0, 1].ord - 2).chr + current_position[1, 1])
         end
       end
       unless current_position[0, 1] == 'G' || current_position[0, 1] == 'H'
-        if right_clear && board[(current_position[0, 1].ord + 2).chr + current_position[1, 1]].is_a?(String)
+        proposed_position = (current_position[0, 1].ord + 2).chr + current_position[1, 1]
+        if right_clear && board[proposed_position].is_a?(String) && check_rooks(proposed_position, board)
           moves.push((current_position[0, 1].ord + 2).chr + current_position[1, 1])
+          @castling_moves.push((current_position[0, 1].ord + 2).chr + current_position[1, 1])
         end
       end
     end
     moves.uniq
+  end
+
+  def find_rooks(board)
+    rooks = []
+    board.each do |key, value|
+      unless value.is_a?(String)
+        if value.color == @color && value.is_a?(Rook)
+          rooks.push(key)
+        end
+      end
+    end
+    rooks
+  end
+
+  def check_rooks(position, board)
+    rooks = find_rooks(board)
+    available_rook = false
+    rooks.each do |rook|
+      if board[rook].all_moves(rook, board).include?(position) && board[rook].move_count.zero?
+        available_rook = true
+      end
+    end
+    available_rook
   end
 end
 
@@ -605,13 +634,51 @@ class Board
       if check(origin, destination)
         puts "THAT MOVE IS NOT ALLOWED AS IT WOULD PUT YOUR KING IN CHECK\n"
       else
-        valid_move = true
+        if @grid[origin].is_a?(King) && @grid[origin].castling_moves.include?(destination)
+          if castling(origin, destination)
+            valid_move = true
+          else
+            puts "THAT CASTLING MOVE IS NOT VALID AS THE KING PASSES THROUGH A SQUARE THAT IS UNDER ATTACK\n"
+          end
+        else
+          @grid[destination] = @grid[origin]
+          @grid[destination].position = destination
+          @grid[origin] = '*'
+          @grid[destination].move_count += 1
+          valid_move = true
+        end
       end
     end
-    @grid[destination] = @grid[origin]
-    @grid[destination].position = destination
-    @grid[origin] = '*'
-    @grid[destination].move_count += 1
+  end
+
+  def castling(origin, destination)
+    complete = false
+    if %w[A B C D].include?(destination[0, 1])
+      rook_location = (destination[0, 1].ord + 1).chr + destination[1, 1]
+      unless check(origin, rook_location)
+        @grid[rook_location] = @grid['A' + destination[1, 1]]
+        @grid[rook_location].position = rook_location
+        @grid['A' + destination[1, 1]] = '*'
+        complete = true
+        @grid[rook_location].move_count += 1
+      end
+    else
+      rook_location = (destination[0, 1].ord - 1).chr + destination[1, 1]
+      unless check(origin, rook_location)
+        @grid[rook_location] = @grid['H' + destination[1, 1]]
+        @grid[rook_location].position = rook_location
+        @grid['H' + destination[1, 1]] = '*'
+        complete = true
+        @grid[rook_location].move_count += 1
+      end
+    end
+    if complete
+      @grid[destination] = @grid[origin]
+      @grid[destination].position = destination
+      @grid[origin] = '*'
+      @grid[destination].move_count += 1
+    end
+    complete
   end
 
   def checkmate
@@ -713,7 +780,12 @@ class Board
   end
 end
 
-# board = Board.new('a', 'b')
-# board.show
-# board.move
-# board.show
+board = Board.new('a', 'b')
+board.grid['F1'] = '*'
+board.grid['G1'] = '*'
+board.grid['F8'] = '*'
+board.grid['G8'] = '*'
+board.grid['G7'] = Rook.new('black', 'G7')
+board.show
+board.move
+board.show
