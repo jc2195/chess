@@ -358,7 +358,7 @@ end
 
 # An object representing the pawn chess piece
 class Pawn
-  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :start
+  attr_accessor :color, :symbol, :position, :possible_moves, :move_count, :start, :en_passant_moves, :en_passant_enemy_pawns
 
   def initialize(color, position)
     @color = color
@@ -366,6 +366,8 @@ class Pawn
     @position = position
     @move_count = 0
     @start = determine_direction
+    @en_passant_moves = []
+    @en_passant_enemy_pawns = []
   end
 
   def symbol_selector
@@ -380,11 +382,11 @@ class Pawn
     end
   end
 
-
-
   def all_moves(position, board)
     current_position = position
     moves = []
+    @en_passant_moves = []
+    @en_passant_enemy_pawns = []
     if @start == 'top'
       if board[current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s].is_a?(String)
         moves.push(current_position[0, 1] + (current_position[1, 1].to_i - 1).to_s)
@@ -395,7 +397,14 @@ class Pawn
       end
       unless current_position[0, 1] == 'A'
         pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i - 1).to_s
-        unless board[pos].is_a?(String)
+        pawn_pos = (current_position[0, 1].ord - 1).chr + current_position[1, 1]
+        if board[pos].is_a?(String)
+          if current_position[1, 1] == '4' && check_pawns(current_position, board).include?(pawn_pos)
+            moves.push(pos)
+            @en_passant_moves.push(pos)
+            @en_passant_enemy_pawns.push(pawn_pos)
+          end
+        else
           unless board[pos].color == @color
             moves.push(pos)
           end
@@ -403,7 +412,14 @@ class Pawn
       end
       unless current_position[0, 1] == 'H'
         pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i - 1).to_s
-        unless board[pos].is_a?(String)
+        pawn_pos = (current_position[0, 1].ord + 1).chr + current_position[1, 1]
+        if board[pos].is_a?(String)
+          if current_position[1, 1] == '4' && check_pawns(current_position, board).include?(pawn_pos)
+            moves.push(pos)
+            @en_passant_moves.push(pos)
+            @en_passant_enemy_pawns.push(pawn_pos)
+          end
+        else
           unless board[pos].color == @color
             moves.push(pos)
           end
@@ -419,7 +435,14 @@ class Pawn
       end
       unless current_position[0, 1] == 'A'
         pos = (current_position[0, 1].ord - 1).chr + (current_position[1, 1].to_i + 1).to_s
-        unless board[pos].is_a?(String)
+        pawn_pos = (current_position[0, 1].ord - 1).chr + current_position[1, 1]
+        if board[pos].is_a?(String)
+          if current_position[1, 1] == '5' && check_pawns(current_position, board).include?(pawn_pos)
+            moves.push(pos)
+            @en_passant_moves.push(pos)
+            @en_passant_enemy_pawns.push(pawn_pos)
+          end
+        else
           unless board[pos].color == @color
             moves.push(pos)
           end
@@ -427,7 +450,14 @@ class Pawn
       end
       unless current_position[0, 1] == 'H'
         pos = (current_position[0, 1].ord + 1).chr + (current_position[1, 1].to_i + 1).to_s
-        unless board[pos].is_a?(String)
+        pawn_pos = (current_position[0, 1].ord + 1).chr + current_position[1, 1]
+        if board[pos].is_a?(String)
+          if current_position[1, 1] == '5' && check_pawns(current_position, board).include?(pawn_pos)
+            moves.push(pos)
+            @en_passant_moves.push(pos)
+            @en_passant_enemy_pawns.push(pawn_pos)
+          end
+        else
           unless board[pos].color == @color
             moves.push(pos)
           end
@@ -436,17 +466,41 @@ class Pawn
     end
     moves
   end
+
+  def find_pawns(board)
+    pawns = []
+    board.each do |key, value|
+      unless value.is_a?(String)
+        if value.color != @color && value.is_a?(Pawn) && value.move_count == 1
+          pawns.push(key)
+        end
+      end
+    end
+    pawns
+  end
+
+  def check_pawns(position, board)
+    pawns = find_pawns(board)
+    good_pawns = []
+    pawns.each do |pawn|
+      if board[pawn].position[1, 1] == position[1, 1]
+        good_pawns.push(pawn)
+      end
+    end
+    good_pawns
+  end
 end
 
 # An object representing the game board, containing all information about whats on it
 class Board
-  attr_accessor :black, :white, :grid, :current_player
+  attr_accessor :black, :white, :grid, :current_player, :last_move
 
   def initialize(black, white)
     @black = black
     @white = white
     @grid = make_grid
     @current_player = 'white'
+    @last_move = nil
   end
 
   def make_grid
@@ -633,20 +687,28 @@ class Board
       destination = fetch_destination(origin)
       if check(origin, destination)
         puts "THAT MOVE IS NOT ALLOWED AS IT WOULD PUT YOUR KING IN CHECK\n"
-      else
-        if @grid[origin].is_a?(King) && @grid[origin].castling_moves.include?(destination)
-          if castling(origin, destination)
-            valid_move = true
-          else
-            puts "THAT CASTLING MOVE IS NOT VALID AS THE KING PASSES THROUGH A SQUARE THAT IS UNDER ATTACK\n"
-          end
-        else
-          @grid[destination] = @grid[origin]
-          @grid[destination].position = destination
-          @grid[origin] = '*'
-          @grid[destination].move_count += 1
+      elsif @grid[origin].is_a?(King) && @grid[origin].castling_moves.include?(destination)
+        if castling(origin, destination)
+          @last_move = destination
           valid_move = true
+        else
+          puts "THAT CASTLING MOVE IS NOT VALID AS THE KING PASSES THROUGH A SQUARE THAT IS UNDER ATTACK\n"
         end
+      elsif @grid[origin].is_a?(Pawn) && @grid[origin].en_passant_moves.include?(destination)
+        if @grid[origin].en_passant_enemy_pawns.include?(@last_move) && destination[0, 1] == @last_move[0, 1]
+          en_passant(origin, destination, @last_move)
+          @last_move = destination
+          valid_move = true
+        else
+          puts "THAT EN PASSANT MOVE IS NOT VALID AS THE ENEMY PAWN DID NOT MOVE THERE ON THE LAST TURN\n"
+        end
+      else
+        @grid[destination] = @grid[origin]
+        @grid[destination].position = destination
+        @grid[origin] = '*'
+        @grid[destination].move_count += 1
+        @last_move = destination
+        valid_move = true
       end
     end
   end
@@ -679,6 +741,14 @@ class Board
       @grid[destination].move_count += 1
     end
     complete
+  end
+
+  def en_passant(origin, destination, captured_pawn)
+    @grid[destination] = @grid[origin]
+    @grid[destination].position = destination
+    @grid[origin] = '*'
+    @grid[captured_pawn] = '*'
+    @grid[destination].move_count += 1
   end
 
   def checkmate
@@ -780,12 +850,6 @@ class Board
   end
 end
 
-board = Board.new('a', 'b')
-board.grid['F1'] = '*'
-board.grid['G1'] = '*'
-board.grid['F8'] = '*'
-board.grid['G8'] = '*'
-board.grid['G7'] = Rook.new('black', 'G7')
-board.show
-board.move
-board.show
+# board = Board.new('a', 'b')
+# board.show
+# board.move

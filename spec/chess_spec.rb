@@ -798,6 +798,38 @@ describe Pawn do
       expect(result.include?('E6')).to eql(true)
       expect(result.length).to eql(2)
     end
+
+    it 'correctly returns en passant moves when number of moves made by captured pawn is 1' do
+      pawn = Pawn.new('black', 'D5')
+      pawn.move_count = 1
+      pawn.start = 'bottom'
+      en_passant_grid = blank_grid
+      en_passant_grid['D5'] = pawn
+      en_passant_grid['E5'] = Pawn.new('white', 'E5')
+      en_passant_grid['E5'].move_count = 1
+      en_passant_grid['C5'] = Pawn.new('black', 'C5')
+      result = pawn.all_moves(pawn.position, en_passant_grid)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('E6')).to eql(true)
+      expect(result.include?('C6')).to eql(false)
+      expect(result.length).to eql(2)
+    end
+
+    it 'does not return en passant moves when number of moves made by captured pawn is more than 1' do
+      pawn = Pawn.new('black', 'D5')
+      pawn.move_count = 1
+      pawn.start = 'bottom'
+      en_passant_grid = blank_grid
+      en_passant_grid['D5'] = pawn
+      en_passant_grid['E5'] = Pawn.new('white', 'E5')
+      en_passant_grid['E5'].move_count = 2
+      en_passant_grid['C5'] = Pawn.new('black', 'C5')
+      result = pawn.all_moves(pawn.position, en_passant_grid)
+      expect(result.include?('D6')).to eql(true)
+      expect(result.include?('E6')).to eql(false)
+      expect(result.include?('C6')).to eql(false)
+      expect(result.length).to eql(1)
+    end
   end
 end
 
