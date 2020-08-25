@@ -583,6 +583,9 @@ class Board
   end
 
   def show
+    puts 'White chess pieces are: ♔♕♖♗♘♙'
+    puts 'Black chess pieces are: ♚♛♜♝♞♟︎'
+    puts "\n\n"
     puts '    A B C D E F G H'
     puts '   -----------------'
     letters = ('A'..'H').to_a
